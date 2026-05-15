@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Analytics Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>Mobile Analytics Dashboard</h1>
+
+            <div id="status" class="status offline">
+                Offline
+            </div>
+        </div>
+
+        <div class="cards">
+
+            <div class="card">
+                <h2>Total Events</h2>
+                <p id="totalEvents">0</p>
+            </div>
+
+            <div class="card">
+                <h2>Active Users</h2>
+                <p id="activeUsers">0</p>
+            </div>
+
+        </div>
+
+        <div class="table-container">
+
+            <h2>Live Phone Events</h2>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Application</th>
+                        <th>Event</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+
+                <tbody id="eventsTableBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
