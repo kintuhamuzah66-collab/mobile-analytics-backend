@@ -22,18 +22,12 @@ async def upload_event(event: PhoneEvent):
 
     try:
 
-        event_data = {
-            "user_name": event.user_name,
-            "app_name": event.app_name,
-            "event_type": event.event_type,
-            "timestamp": str(event.timestamp),
-            "duration_seconds": event.duration_seconds
-        }
+        # Convert full Pydantic model to dictionary
+        event_data = event.dict()
 
         logger.info(
             f"New event from {event.user_name}"
         )
-
 
         # Firebase save
         save_phone_event(event_data)
@@ -56,6 +50,7 @@ async def upload_event(event: PhoneEvent):
         }
 
     except Exception as e:
+
         logger.error(str(e))
 
         print("UPLOAD ERROR:", e)

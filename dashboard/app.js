@@ -1,9 +1,9 @@
+
+
 const API_BASE =
-    "redis://red-d83sjo7aqgkc73a40dh0:6379";
+    "https://mobile-analytics-backend-1.onrender.com";
 
-const socket =
-    io(API_BASE);
-
+const socket = io(API_BASE);
 
 // =====================================
 // ELEMENTS
