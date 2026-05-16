@@ -23,7 +23,10 @@ async def upload_event(event: PhoneEvent):
     try:
 
         # Convert full Pydantic model to dictionary
-        event_data = event.dict()
+        event_data = {
+            **event.model_dump(),
+            "timestamp": str(event.timestamp)
+        }
 
         logger.info(
             f"New event from {event.user_name}"
