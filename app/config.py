@@ -8,10 +8,8 @@ FIREBASE_URL = os.getenv(
     "FIREBASE_URL"
 )
 
-REDIS_HOST = os.getenv(
-    "REDIS_HOST"
-)
+import os
 
-REDIS_PORT = int(
-    os.getenv("REDIS_PORT")
-)
+FIREBASE_URL = os.getenv("FIREBASE_URL")
+
+REDIS_URL = os.getenv("REDIS_URL")
