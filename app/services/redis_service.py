@@ -1,14 +1,10 @@
+import os
 import redis
 
-from app.config import (
-    REDIS_HOST,
-    REDIS_PORT
-)
 
-# Create Redis connection
-r = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
+# Create Redis connection using Render REDIS_URL
+r = redis.from_url(
+    os.getenv("REDIS_URL"),
     decode_responses=True
 )
 

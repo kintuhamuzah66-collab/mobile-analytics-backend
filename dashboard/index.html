@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta name="viewport"
@@ -12,6 +13,9 @@
     <link rel="stylesheet" href="style.css">
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
@@ -23,56 +27,109 @@
         <div class="header">
 
             <div>
-                <h1>CS Students Mobile Analytics Dashboard</h1>
+
+                <h1>
+                    Mobile Analytics Dashboard
+                </h1>
+
                 <p>
-                    Real-time phone activity monitoring system
+                    Real-Time Phone Activity Monitoring
                 </p>
+
             </div>
 
-            <div id="status" class="status offline">
-                Offline
+            <div class="header-right">
+
+                <div id="liveClock" class="clock"></div>
+
+                <div id="status" class="status offline">
+                    Offline
+                </div>
+
             </div>
 
         </div>
 
 
-        <!-- ANALYTICS CARDS -->
+        <!-- STATS -->
 
         <div class="cards">
 
-            <div class="card">
+            <div class="card glow-blue">
+
                 <h2>Total Events</h2>
+
                 <p id="totalEvents">0</p>
+
             </div>
 
-            <div class="card">
+            <div class="card glow-green">
+
                 <h2>Active Users</h2>
+
                 <p id="activeUsers">0</p>
+
             </div>
 
-            <div class="card">
+            <div class="card glow-purple">
+
                 <h2>Top App</h2>
+
                 <p id="topApp">---</p>
+
             </div>
 
         </div>
 
 
-        <!-- LIVE EVENTS TABLE -->
+        <!-- CHART + ACTIVE USERS -->
+
+        <div class="grid-two">
+
+            <div class="table-container">
+
+                <h2>Top Applications</h2>
+
+                <canvas id="appsChart"></canvas>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <h2>Currently Active Users</h2>
+
+                <ul id="activeUsersList"></ul>
+
+            </div>
+
+        </div>
+
+
+        <!-- LIVE EVENTS -->
 
         <div class="table-container">
 
-            <h2>Live Phone Events</h2>
+            <div class="table-header">
+
+                <h2>Live Phone Events</h2>
+
+                <span class="live-dot"></span>
+
+            </div>
 
             <table>
 
                 <thead>
 
                     <tr>
+
                         <th>User</th>
                         <th>Application</th>
                         <th>Event</th>
+                        <th>Duration</th>
                         <th>Time</th>
+
                     </tr>
 
                 </thead>
@@ -82,19 +139,6 @@
                 </tbody>
 
             </table>
-
-        </div>
-
-
-        <!-- ACTIVE USERS -->
-
-        <div class="table-container">
-
-            <h2>Currently Active Users</h2>
-
-            <ul id="activeUsersList">
-
-            </ul>
 
         </div>
 

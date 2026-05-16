@@ -1,4 +1,13 @@
-const socket = io("http://localhost:8000");
+const API_BASE =
+    "http://localhost:8000";
+
+const socket =
+    io(API_BASE);
+
+
+// =====================================
+// ELEMENTS
+// =====================================
 
 const statusDiv =
     document.getElementById("status");
@@ -18,9 +27,24 @@ const tableBody =
 const activeUsersList =
     document.getElementById("activeUsersList");
 
+const liveClock =
+    document.getElementById("liveClock");
+
 
 // =====================================
-// SOCKET CONNECTION
+// LIVE CLOCK
+// =====================================
+
+setInterval(() => {
+
+    liveClock.innerText =
+        new Date().toLocaleTimeString();
+
+}, 1000);
+
+
+// =====================================
+// SOCKET STATUS
 // =====================================
 
 socket.on("connect", () => {
@@ -44,7 +68,7 @@ socket.on("disconnect", () => {
 
 
 // =====================================
-// LIVE EVENT STREAM
+// LIVE EVENTS
 // =====================================
 
 socket.on("new_phone_event", (data) => {
@@ -58,22 +82,89 @@ socket.on("new_phone_event", (data) => {
 
 
 // =====================================
-// ADD EVENT ROW
+// TABLE
 // =====================================
 
 function addEventToTable(data) {
 
-    const row = document.createElement("tr");
+    const row =
+        document.createElement("tr");
 
     row.innerHTML = `
         <td>${data.user_name}</td>
         <td>${data.app_name}</td>
         <td>${data.event_type}</td>
+        <td>${data.duration_seconds || 0}s</td>
         <td>${new Date().toLocaleTimeString()}</td>
     `;
 
     tableBody.prepend(row);
+
+    if (tableBody.children.length > 20) {
+
+        tableBody.removeChild(
+            tableBody.lastChild
+        );
+    }
 }
+
+
+// =====================================
+// CHART
+// =====================================
+
+const ctx =
+    document.getElementById("appsChart");
+
+const appsChart =
+    new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+
+            labels: [],
+
+            datasets: [{
+
+                label: "App Usage",
+
+                data: []
+            }]
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+
+                legend: {
+
+                    labels: {
+                        color: "white"
+                    }
+                }
+            },
+
+            scales: {
+
+                x: {
+
+                    ticks: {
+                        color: "white"
+                    }
+                },
+
+                y: {
+
+                    ticks: {
+                        color: "white"
+                    }
+                }
+            }
+        }
+    });
 
 
 // =====================================
@@ -82,11 +173,11 @@ function addEventToTable(data) {
 
 async function fetchStats() {
 
-    const response = await fetch(
-        "http://localhost:8000/stats"
-    );
+    const response =
+        await fetch(`${API_BASE}/stats`);
 
-    const stats = await response.json();
+    const stats =
+        await response.json();
 
     totalEventsElement.innerText =
         stats.total_events;
@@ -94,47 +185,73 @@ async function fetchStats() {
     activeUsersElement.innerText =
         stats.active_users;
 
-    // Find top app
     let topApp = "---";
 
     let maxCount = 0;
 
+    const labels = [];
+
+    const values = [];
+
     for (const app in stats.top_apps) {
+
+        labels.push(app);
+
+        values.push(
+            stats.top_apps[app]
+        );
 
         if (stats.top_apps[app] > maxCount) {
 
-            maxCount = stats.top_apps[app];
+            maxCount =
+                stats.top_apps[app];
 
             topApp = app;
         }
     }
 
-    topAppElement.innerText = topApp;
+    topAppElement.innerText =
+        topApp;
+
+    appsChart.data.labels =
+        labels;
+
+    appsChart.data.datasets[0].data =
+        values;
+
+    appsChart.update();
 }
 
 
 // =====================================
-// FETCH ACTIVE USERS
+// ACTIVE USERS
 // =====================================
 
 async function fetchActiveUsers() {
 
-    const response = await fetch(
-        "http://localhost:8000/active-users"
-    );
+    const response =
+        await fetch(
+            `${API_BASE}/active-users`
+        );
 
-    const data = await response.json();
+    const data =
+        await response.json();
 
     activeUsersList.innerHTML = "";
 
     for (const user in data.active_users) {
 
-        const app = data.active_users[user];
+        const app =
+            data.active_users[user];
 
-        const li = document.createElement("li");
+        const li =
+            document.createElement("li");
 
-        li.innerText =
-            `${user} using ${app}`;
+        li.innerHTML = `
+            <strong>${user}</strong>
+            <br>
+            using ${app}
+        `;
 
         activeUsersList.appendChild(li);
     }
@@ -142,23 +259,26 @@ async function fetchActiveUsers() {
 
 
 // =====================================
-// FETCH EVENT HISTORY
+// FETCH HISTORY
 // =====================================
 
 async function fetchEvents() {
 
-    const response = await fetch(
-        "http://localhost:8000/events"
-    );
+    const response =
+        await fetch(
+            `${API_BASE}/events`
+        );
 
-    const events = await response.json();
+    const events =
+        await response.json();
 
     tableBody.innerHTML = "";
 
-    events.slice(0, 20).forEach(event => {
+    events.reverse().slice(0, 20)
+        .forEach(event => {
 
-        addEventToTable(event);
-    });
+            addEventToTable(event);
+        });
 }
 
 
@@ -174,11 +294,13 @@ fetchActiveUsers();
 
 
 // =====================================
-// AUTO REFRESH ACTIVE USERS
+// AUTO REFRESH
 // =====================================
 
 setInterval(() => {
 
     fetchActiveUsers();
+
+    fetchStats();
 
 }, 5000);
