@@ -1,5 +1,5 @@
 const API_BASE =
-    "http://localhost:8000";
+    "redis://red-d83sjo7aqgkc73a40dh0:6379";
 
 const socket =
     io(API_BASE);
