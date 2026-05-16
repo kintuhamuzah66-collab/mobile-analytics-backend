@@ -20,132 +20,201 @@
 
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <!-- HEADER -->
+    <!-- HEADER -->
 
-        <div class="header">
+    <div class="header">
 
-            <div>
+        <div>
 
-                <h1>
-                    Mobile Analytics Dashboard
-                </h1>
+            <h1>
+                Mobile Analytics Dashboard
+            </h1>
 
-                <p>
-                    Real-Time Phone Activity Monitoring
-                </p>
-
-            </div>
-
-            <div class="header-right">
-
-                <div id="liveClock" class="clock"></div>
-
-                <div id="status" class="status offline">
-                    Offline
-                </div>
-
-            </div>
+            <p>
+                Real-Time Monitoring System
+            </p>
 
         </div>
 
+        <div class="header-right">
 
-        <!-- STATS -->
+            <div id="liveClock" class="clock"></div>
 
-        <div class="cards">
-
-            <div class="card glow-blue">
-
-                <h2>Total Events</h2>
-
-                <p id="totalEvents">0</p>
-
+            <div id="status"
+                 class="status offline">
+                Offline
             </div>
-
-            <div class="card glow-green">
-
-                <h2>Active Users</h2>
-
-                <p id="activeUsers">0</p>
-
-            </div>
-
-            <div class="card glow-purple">
-
-                <h2>Top App</h2>
-
-                <p id="topApp">---</p>
-
-            </div>
-
-        </div>
-
-
-        <!-- CHART + ACTIVE USERS -->
-
-        <div class="grid-two">
-
-            <div class="table-container">
-
-                <h2>Top Applications</h2>
-
-                <canvas id="appsChart"></canvas>
-
-            </div>
-
-
-            <div class="table-container">
-
-                <h2>Currently Active Users</h2>
-
-                <ul id="activeUsersList"></ul>
-
-            </div>
-
-        </div>
-
-
-        <!-- LIVE EVENTS -->
-
-        <div class="table-container">
-
-            <div class="table-header">
-
-                <h2>Live Phone Events</h2>
-
-                <span class="live-dot"></span>
-
-            </div>
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>User</th>
-                        <th>Application</th>
-                        <th>Event</th>
-                        <th>Duration</th>
-                        <th>Time</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="eventsTableBody">
-
-                </tbody>
-
-            </table>
 
         </div>
 
     </div>
 
-    <script src="app.js"></script>
+
+    <!-- FILTERS -->
+
+    <div class="filters">
+
+        <div class="time-filters">
+
+            <button class="filter-btn active"
+                    data-filter="1h">
+                Last Hour
+            </button>
+
+            <button class="filter-btn"
+                    data-filter="5m">
+                Last 5 Minutes
+            </button>
+
+            <button class="filter-btn"
+                    data-filter="24h">
+                Last 24 Hours
+            </button>
+
+            <button class="filter-btn"
+                    data-filter="custom">
+                Custom
+            </button>
+
+        </div>
+
+        <div class="user-filter">
+
+            <select id="userFilter">
+
+                <option value="ALL">
+                    All Users
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <!-- CUSTOM FILTER -->
+
+    <div id="customControls"
+         class="custom-controls">
+
+        <input type="datetime-local"
+               id="startDate">
+
+        <input type="datetime-local"
+               id="endDate">
+
+        <button id="applyCustom">
+            Apply
+        </button>
+
+    </div>
+
+
+    <!-- CARDS -->
+
+    <div class="cards">
+
+        <div class="card glow-blue">
+
+            <h2>Total Events</h2>
+
+            <p id="totalEvents">0</p>
+
+        </div>
+
+        <div class="card glow-green">
+
+            <h2>Active Users</h2>
+
+            <p id="activeUsers">0</p>
+
+        </div>
+
+        <div class="card glow-purple">
+
+            <h2>Top App</h2>
+
+            <p id="topApp">---</p>
+
+        </div>
+
+    </div>
+
+
+    <!-- GRID -->
+
+    <div class="grid-three">
+
+        <div class="table-container">
+
+            <h2>Top 5 Apps</h2>
+
+            <canvas id="appsChart"></canvas>
+
+        </div>
+
+        <div class="table-container">
+
+            <h2>Active Users</h2>
+
+            <ul id="activeUsersList"></ul>
+
+        </div>
+
+        <div class="table-container">
+
+            <h2>Idle Users</h2>
+
+            <ul id="idleUsersList"></ul>
+
+        </div>
+
+    </div>
+
+
+    <!-- EVENTS -->
+
+    <div class="table-container">
+
+        <div class="table-header">
+
+            <h2>Live Phone Events</h2>
+
+            <span class="live-dot"></span>
+
+        </div>
+
+        <table>
+
+            <thead>
+
+            <tr>
+
+                <th>User</th>
+                <th>Application</th>
+                <th>Event</th>
+                <th>Duration</th>
+                <th>Screen</th>
+                <th>Time</th>
+
+            </tr>
+
+            </thead>
+
+            <tbody id="eventsTableBody">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
 
 </body>
-
 </html>

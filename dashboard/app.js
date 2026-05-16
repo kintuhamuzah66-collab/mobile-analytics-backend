@@ -1,9 +1,22 @@
-
-
 const API_BASE =
     "https://mobile-analytics-backend-1.onrender.com";
 
 const socket = io(API_BASE);
+
+// =====================================
+// STATE
+// =====================================
+
+let allEvents = [];
+
+let selectedUser = "ALL";
+
+let selectedTimeFilter = "1h";
+
+let customStart = null;
+
+let customEnd = null;
+
 
 // =====================================
 // ELEMENTS
@@ -21,14 +34,29 @@ const activeUsersElement =
 const topAppElement =
     document.getElementById("topApp");
 
-const tableBody =
-    document.getElementById("eventsTableBody");
-
 const activeUsersList =
     document.getElementById("activeUsersList");
 
+const idleUsersList =
+    document.getElementById("idleUsersList");
+
+const tableBody =
+    document.getElementById("eventsTableBody");
+
 const liveClock =
     document.getElementById("liveClock");
+
+const userFilter =
+    document.getElementById("userFilter");
+
+const customControls =
+    document.getElementById("customControls");
+
+const startDate =
+    document.getElementById("startDate");
+
+const endDate =
+    document.getElementById("endDate");
 
 
 // =====================================
@@ -56,7 +84,6 @@ socket.on("connect", () => {
     statusDiv.classList.add("online");
 });
 
-
 socket.on("disconnect", () => {
 
     statusDiv.innerText = "Offline";
@@ -73,40 +100,10 @@ socket.on("disconnect", () => {
 
 socket.on("new_phone_event", (data) => {
 
-    addEventToTable(data);
+    allEvents.push(data);
 
-    fetchStats();
-
-    fetchActiveUsers();
+    renderDashboard();
 });
-
-
-// =====================================
-// TABLE
-// =====================================
-
-function addEventToTable(data) {
-
-    const row =
-        document.createElement("tr");
-
-    row.innerHTML = `
-        <td>${data.user_name}</td>
-        <td>${data.app_name}</td>
-        <td>${data.event_type}</td>
-        <td>${data.duration_seconds || 0}s</td>
-        <td>${new Date().toLocaleTimeString()}</td>
-    `;
-
-    tableBody.prepend(row);
-
-    if (tableBody.children.length > 20) {
-
-        tableBody.removeChild(
-            tableBody.lastChild
-        );
-    }
-}
 
 
 // =====================================
@@ -127,7 +124,7 @@ const appsChart =
 
             datasets: [{
 
-                label: "App Usage",
+                label: "Top Apps",
 
                 data: []
             }]
@@ -168,43 +165,163 @@ const appsChart =
 
 
 // =====================================
-// FETCH STATS
+// FILTER EVENTS
 // =====================================
 
-async function fetchStats() {
+function getFilteredEvents() {
 
-    const response =
-        await fetch(`${API_BASE}/stats`);
+    let filtered = [...allEvents];
 
-    const stats =
-        await response.json();
+    // USER FILTER
+
+    if (selectedUser !== "ALL") {
+
+        filtered = filtered.filter(
+            event =>
+                event.user_name === selectedUser
+        );
+    }
+
+    // TIME FILTER
+
+    const now = new Date();
+
+    if (selectedTimeFilter === "5m") {
+
+        filtered = filtered.filter(event => {
+
+            const eventTime =
+                new Date(event.timestamp);
+
+            return (
+                now - eventTime
+                <= 5 * 60 * 1000
+            );
+        });
+    }
+
+    else if (selectedTimeFilter === "1h") {
+
+        filtered = filtered.filter(event => {
+
+            const eventTime =
+                new Date(event.timestamp);
+
+            return (
+                now - eventTime
+                <= 60 * 60 * 1000
+            );
+        });
+    }
+
+    else if (selectedTimeFilter === "24h") {
+
+        filtered = filtered.filter(event => {
+
+            const eventTime =
+                new Date(event.timestamp);
+
+            return (
+                now - eventTime
+                <= 24 * 60 * 60 * 1000
+            );
+        });
+    }
+
+    else if (
+        selectedTimeFilter === "custom"
+        && customStart
+        && customEnd
+    ) {
+
+        filtered = filtered.filter(event => {
+
+            const eventTime =
+                new Date(event.timestamp);
+
+            return (
+                eventTime >= customStart
+                &&
+                eventTime <= customEnd
+            );
+        });
+    }
+
+    return filtered;
+}
+
+
+// =====================================
+// RENDER DASHBOARD
+// =====================================
+
+function renderDashboard() {
+
+    const filteredEvents =
+        getFilteredEvents();
+
+    renderStats(filteredEvents);
+
+    renderTable(filteredEvents);
+
+    renderUsers(filteredEvents);
+
+    renderChart(filteredEvents);
+
+    populateUserFilter();
+}
+
+
+// =====================================
+// STATS
+// =====================================
+
+function renderStats(events) {
 
     totalEventsElement.innerText =
-        stats.total_events;
+        events.length;
+
+    const activeUsers =
+        new Set();
+
+    const topApps = {};
+
+    events.forEach(event => {
+
+        if (
+            event.app_name !== "Idle"
+        ) {
+
+            activeUsers.add(
+                event.user_name
+            );
+        }
+
+        if (
+            !topApps[event.app_name]
+        ) {
+
+            topApps[event.app_name] = 0;
+        }
+
+        topApps[event.app_name]++;
+    });
 
     activeUsersElement.innerText =
-        stats.active_users;
+        activeUsers.size;
 
     let topApp = "---";
 
     let maxCount = 0;
 
-    const labels = [];
+    for (const app in topApps) {
 
-    const values = [];
-
-    for (const app in stats.top_apps) {
-
-        labels.push(app);
-
-        values.push(
-            stats.top_apps[app]
-        );
-
-        if (stats.top_apps[app] > maxCount) {
+        if (
+            topApps[app] > maxCount
+        ) {
 
             maxCount =
-                stats.top_apps[app];
+                topApps[app];
 
             topApp = app;
         }
@@ -212,37 +329,41 @@ async function fetchStats() {
 
     topAppElement.innerText =
         topApp;
-
-    appsChart.data.labels =
-        labels;
-
-    appsChart.data.datasets[0].data =
-        values;
-
-    appsChart.update();
 }
 
 
 // =====================================
-// ACTIVE USERS
+// USERS
 // =====================================
 
-async function fetchActiveUsers() {
-
-    const response =
-        await fetch(
-            `${API_BASE}/active-users`
-        );
-
-    const data =
-        await response.json();
+function renderUsers(events) {
 
     activeUsersList.innerHTML = "";
 
-    for (const user in data.active_users) {
+    idleUsersList.innerHTML = "";
 
-        const app =
-            data.active_users[user];
+    const latestUserActivity = {};
+
+    events.forEach(event => {
+
+        latestUserActivity[
+            event.user_name
+        ] = event;
+    });
+
+    for (const user in latestUserActivity) {
+
+        const event =
+            latestUserActivity[user];
+
+        const secondsAgo =
+            Math.floor(
+                (
+                    new Date()
+                    -
+                    new Date(event.timestamp)
+                ) / 1000
+            );
 
         const li =
             document.createElement("li");
@@ -250,47 +371,232 @@ async function fetchActiveUsers() {
         li.innerHTML = `
             <strong>${user}</strong>
             <br>
-            using ${app}
+            ${event.app_name}
+            <br>
+            <span class="last-seen">
+                Last seen:
+                ${secondsAgo}s ago
+            </span>
         `;
 
-        activeUsersList.appendChild(li);
+        if (
+            event.app_name === "Idle"
+        ) {
+
+            idleUsersList
+                .appendChild(li);
+        }
+
+        else {
+
+            activeUsersList
+                .appendChild(li);
+        }
     }
 }
 
 
 // =====================================
-// FETCH HISTORY
+// TABLE
+// =====================================
+
+function renderTable(events) {
+
+    tableBody.innerHTML = "";
+
+    events
+        .slice()
+        .reverse()
+        .slice(0, 30)
+        .forEach(event => {
+
+            const row =
+                document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${event.user_name}</td>
+                <td>${event.app_name}</td>
+                <td>${event.event_type}</td>
+                <td>${event.duration_seconds || 0}s</td>
+                <td>${event.screen_state || "---"}</td>
+                <td>${new Date(
+                    event.timestamp
+                ).toLocaleTimeString()}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+}
+
+
+// =====================================
+// CHART
+// =====================================
+
+function renderChart(events) {
+
+    const appCounts = {};
+
+    events.forEach(event => {
+
+        if (
+            event.app_name === "Idle"
+        ) return;
+
+        if (
+            !appCounts[event.app_name]
+        ) {
+
+            appCounts[event.app_name] = 0;
+        }
+
+        appCounts[event.app_name]++;
+    });
+
+    const sortedApps =
+        Object.entries(appCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+    appsChart.data.labels =
+        sortedApps.map(item => item[0]);
+
+    appsChart.data.datasets[0].data =
+        sortedApps.map(item => item[1]);
+
+    appsChart.update();
+}
+
+
+// =====================================
+// FETCH EVENTS
 // =====================================
 
 async function fetchEvents() {
 
     const response =
-        await fetch(
-            `${API_BASE}/events`
-        );
+        await fetch(`${API_BASE}/events`);
 
     const events =
         await response.json();
 
-    tableBody.innerHTML = "";
+    allEvents = events;
 
-    events.reverse().slice(0, 20)
-        .forEach(event => {
-
-            addEventToTable(event);
-        });
+    renderDashboard();
 }
+
+
+// =====================================
+// USER FILTER
+// =====================================
+
+function populateUserFilter() {
+
+    const users =
+        [...new Set(
+            allEvents.map(
+                event => event.user_name
+            )
+        )];
+
+    userFilter.innerHTML =
+        `<option value="ALL">
+            All Users
+        </option>`;
+
+    users.forEach(user => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = user;
+
+        option.innerText = user;
+
+        userFilter.appendChild(option);
+    });
+
+    userFilter.value =
+        selectedUser;
+}
+
+userFilter.addEventListener(
+    "change",
+    (e) => {
+
+        selectedUser =
+            e.target.value;
+
+        renderDashboard();
+    }
+);
+
+
+// =====================================
+// TIME FILTERS
+// =====================================
+
+document.querySelectorAll(
+    ".filter-btn"
+).forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            document
+                .querySelectorAll(".filter-btn")
+                .forEach(btn =>
+                    btn.classList.remove("active")
+                );
+
+            button.classList.add("active");
+
+            selectedTimeFilter =
+                button.dataset.filter;
+
+            if (
+                selectedTimeFilter
+                === "custom"
+            ) {
+
+                customControls.style.display =
+                    "flex";
+            }
+
+            else {
+
+                customControls.style.display =
+                    "none";
+            }
+
+            renderDashboard();
+        }
+    );
+});
+
+document.getElementById(
+    "applyCustom"
+).addEventListener(
+    "click",
+    () => {
+
+        customStart =
+            new Date(startDate.value);
+
+        customEnd =
+            new Date(endDate.value);
+
+        renderDashboard();
+    }
+);
 
 
 // =====================================
 // INITIAL LOAD
 // =====================================
 
-fetchStats();
-
 fetchEvents();
-
-fetchActiveUsers();
 
 
 // =====================================
@@ -299,8 +605,6 @@ fetchActiveUsers();
 
 setInterval(() => {
 
-    fetchActiveUsers();
+    fetchEvents();
 
-    fetchStats();
-
-}, 5000);
+}, 10000);
